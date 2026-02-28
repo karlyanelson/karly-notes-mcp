@@ -131,9 +131,53 @@ Claude calls `search_notes` with "JWT", finds it, and surfaces exactly what you 
 
 ## Running Tests
 
+> **Coming from JavaScript?** Go has testing built in — no need to install Jest, Vitest, or any test library. The `go test` command is part of the language itself, the same way `node` is. Test files live right next to the source files they test (not in a separate `__tests__` folder), and any file ending in `_test.go` is automatically picked up.
+
+### Run all tests
+
 ```bash
 go test -v .
 ```
+
+The flags:
+- `-v` — "verbose": print each test name and whether it passed or failed (without this you only see a summary, like running Jest without `--verbose`)
+- `.` — "this package": run tests in the current directory
+
+### What the output looks like
+
+```
+=== RUN   TestAddAndGetNote
+--- PASS: TestAddAndGetNote (0.00s)
+=== RUN   TestSearchNotes
+--- PASS: TestSearchNotes (0.00s)
+=== RUN   TestFileStorePersistence
+--- PASS: TestFileStorePersistence (0.00s)
+PASS
+ok  	karly-notes-mcp	0.17s
+```
+
+`PASS` at the bottom means everything passed. If a test fails you'll see `FAIL` with the file name and line number of the failing assertion.
+
+### Run a single test by name
+
+```bash
+go test -v -run TestFileStorePersistence .
+```
+
+`-run` takes a pattern matched against test function names — handy when you're working on one thing and don't want to wait for the full suite (same idea as `jest -t "my test name"`).
+
+### What's being tested
+
+| Test | What it covers |
+|------|---------------|
+| `TestAddAndGetNote` | Saving a note and reading it back via the MCP tools |
+| `TestListNotes` | Empty list response, then listing after notes are added |
+| `TestDeleteNote` | Deleting an existing note; error on deleting one that doesn't exist |
+| `TestSearchNotes` | Keyword match, no-match, and case-insensitive search |
+| `TestGetNoteNotFound` | Error response when a note title doesn't exist |
+| `TestFileStorePersistence` | Notes survive a "restart" (write → new instance → read), `created_at` is preserved on update, deletions persist to disk, JSON file is valid |
+
+The first five tests use an in-memory store so they run instantly with no disk I/O. `TestFileStorePersistence` uses Go's `t.TempDir()` — a temporary folder that's automatically cleaned up after the test, so it never leaves anything on your machine.
 
 ## Current Limitations
 
