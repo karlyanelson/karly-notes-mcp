@@ -41,11 +41,27 @@ This compiles the Go source files and produces a single executable file called `
 
 ### 4. Register it with Claude Code
 
+Run this in your **terminal** (not inside Claude), from inside the `karly-notes-mcp/` directory you just cloned:
+
 ```bash
-claude mcp add --transport stdio karly-notes -- $(pwd)/karly-notes-mcp
+claude mcp add --scope user --transport stdio karly-notes -- $(pwd)/karly-notes-mcp
 ```
 
-`$(pwd)` expands to the full path of the current directory, so you don't have to type it out manually.
+A few things to unpack:
+
+- **Run it from the `karly-notes-mcp/` directory.** The `$(pwd)` part is a shell shortcut that expands to the full path of wherever you currently are. If you ran `go build` in that directory and you're still there, `$(pwd)/karly-notes-mcp` becomes the exact path to your binary automatically. If you run it from a different directory, `$(pwd)` will be wrong — just replace it with the absolute path to the binary instead.
+
+- **`--scope user` makes it available in every project on your machine.** This is almost certainly what you want for a personal notes server. Your notes are yours, not tied to any one project. Without `--scope user`, the default scope is `local`, which only makes the server available in whatever directory you're currently working in — not very useful for a global second brain.
+
+- **You run this once, ever.** Claude Code remembers it. From that point on, whenever you open any project and start a session, the notes server is available — Claude launches it automatically in the background when it needs it.
+
+**Scope cheat sheet** — when to use each:
+
+| Scope | Command flag | Good for |
+|-------|-------------|----------|
+| `user` | `--scope user` | Personal tools you want everywhere (like this server) |
+| `project` | `--scope project` | Team tools committed to a repo (e.g. a DB client for this codebase) |
+| `local` | *(default, no flag needed)* | Quick experiments, or project tools you don't want committed to git |
 
 That's it — Claude Code will now launch and manage the server automatically whenever you use it.
 
