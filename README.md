@@ -51,6 +51,8 @@ A few things to unpack:
 
 - **Run it from the `karly-notes-mcp/` directory.** The `$(pwd)` part is a shell shortcut that expands to the full path of wherever you currently are. If you ran `go build` in that directory and you're still there, `$(pwd)/karly-notes-mcp` becomes the exact path to your binary automatically. If you run it from a different directory, `$(pwd)` will be wrong — just replace it with the absolute path to the binary instead.
 
+- **`--transport stdio` tells Claude how to communicate with the server.** See [MCP Transports](#mcp-transports) for a full explanation.
+
 - **`--scope user` makes it available in every project on your machine.** This is almost certainly what you want for a personal notes server. Your notes are yours, not tied to any one project. Without `--scope user`, the default scope is `local`, which only makes the server available in whatever directory you're currently working in — not very useful for a global second brain.
 
 - **You run this once, ever.** Claude Code remembers it. From that point on, whenever you open any project and start a session, the notes server is available — Claude launches it automatically in the background when it needs it.
@@ -100,7 +102,7 @@ The binary is listed in `.gitignore` and not committed to the repo, so anyone wh
 Claude Code has a built-in command for registering MCP servers — no JSON editing required:
 
 ```bash
-claude mcp add --transport stdio karly-notes -- /absolute/path/to/binary/karly-notes-mcp/karly-notes-mcp
+claude mcp add --scope user --transport stdio karly-notes -- /absolute/path/to/binary/karly-notes-mcp/karly-notes-mcp
 ```
 
 Verify it was added:
@@ -268,7 +270,7 @@ Notes are stored in a JSON file on your local machine. The file is created autom
 Pass `--notes-dir` when registering the server:
 
 ```bash
-claude mcp add --transport stdio karly-notes -- /path/to/karly-notes-mcp --notes-dir /path/to/your/notes
+claude mcp add --scope user --transport stdio karly-notes -- /path/to/karly-notes-mcp --notes-dir /path/to/your/notes
 ```
 
 Or set the `KARLY_NOTES_DIR` environment variable:
@@ -365,3 +367,43 @@ You can reconnect the server from inside your current Claude session without res
 4. Select **"Reconnect"**
 
 Claude restarts just the MCP server process using the new binary. Your conversation context stays intact.
+
+---
+
+## MCP Transports
+
+The `--transport` flag in `claude mcp add` tells Claude *how* to communicate with the MCP server — what channel to use to send and receive messages.
+
+There are two transports you'll encounter:
+
+### `stdio` (Standard I/O)
+
+Claude launches the binary as a **child process** and talks to it by writing to its `stdin` and reading from its `stdout`. It's pure inter-process communication — no network, no ports, no URLs. The process starts when your Claude session starts and exits when it ends.
+
+This is why `claude mcp add` takes a **path to a binary** with this transport — Claude needs something to execute.
+
+This also matches what's inside `main.go`:
+
+```go
+server.Run(context.Background(), &mcp.StdioTransport{})
+```
+
+Both sides have to agree on the transport. The binary says "I speak stdio" and `--transport stdio` tells Claude to use stdio to reach it. If they didn't match, they'd have no way to communicate.
+
+**Use `stdio` for:** local binaries running on your machine — like this server.
+
+### `http`
+
+Claude connects to a **remote server** over the network via HTTP. The server is already running somewhere (a hosted URL), and Claude just points at it.
+
+This transport takes a URL instead of a binary path:
+
+```bash
+claude mcp add --transport http my-server https://my-server.example.com/mcp
+```
+
+**Use `http` for:** hosted or shared MCP servers running in the cloud.
+
+---
+
+For this server, `stdio` is always the right choice — it's a local binary that lives on your machine.
