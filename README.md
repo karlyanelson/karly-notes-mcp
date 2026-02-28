@@ -4,6 +4,53 @@ A personal "second brain" MCP server that lets an AI agent save, retrieve, searc
 
 Think of it as a scratchpad for things too small for a wiki but too important to lose.
 
+## Setup
+
+> **First time with Go?** Go is a compiled language — unlike JavaScript where you run source files directly with `node`, Go source code has to be compiled into a binary first. Think of it like a build step that produces a standalone executable, similar to `npm run build` producing a `dist/` folder. You only need to do this once (or again after pulling changes).
+
+### 1. Install Go
+
+Check if you already have it:
+
+```bash
+go version
+```
+
+If not, install it via [brew](https://brew.sh) (macOS):
+
+```bash
+brew install go
+```
+
+Or download it from [go.dev/dl](https://go.dev/dl). You need **Go 1.24 or newer**.
+
+### 2. Clone the repo
+
+```bash
+git clone https://github.com/your-username/karly-notes-mcp
+cd karly-notes-mcp
+```
+
+### 3. Build the binary
+
+```bash
+go build -o karly-notes-mcp .
+```
+
+This compiles the Go source files and produces a single executable file called `karly-notes-mcp` in the current directory. This is the file Claude will actually run.
+
+### 4. Register it with Claude Code
+
+```bash
+claude mcp add --transport stdio karly-notes -- $(pwd)/karly-notes-mcp
+```
+
+`$(pwd)` expands to the full path of the current directory, so you don't have to type it out manually.
+
+That's it — Claude Code will now launch and manage the server automatically whenever you use it.
+
+---
+
 ## Tools
 
 | Tool | Description | Parameters |
@@ -22,7 +69,9 @@ Requires Go 1.24+.
 go build -o karly-notes-mcp .
 ```
 
-The server communicates over stdio using the MCP JSON-RPC protocol. You don't run it directly — your MCP client (Claude Code, VS Code, etc.) launches it.
+This produces a compiled binary called `karly-notes-mcp`. You never run this binary yourself — Claude Code launches it automatically in the background whenever you start a session that uses it. The binary is what Claude actually executes each time it needs to call one of the note tools.
+
+The binary is listed in `.gitignore` and not committed to the repo, so anyone who clones this project needs to run `go build` once to produce it on their own machine before registering it with Claude. See [Setup](#setup) above.
 
 ## Configuration
 
