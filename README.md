@@ -109,11 +109,9 @@ A few things to unpack:
 
 - **`--transport stdio` tells Claude how to communicate with the server.** See [MCP Transports](#mcp-transports) for a full explanation.
 
-- **`--scope user` makes it available in every project on your machine.** This is almost certainly what you want for a personal notes server. Your notes are yours, not tied to any one project. Without `--scope user`, the default scope is `local`, which only makes the server available in whatever directory you're currently working in — not very useful for a global second brain.
+- **`--scope user` makes it available in every project on your machine.** This is almost certainly what you want for a personal notes server. Your notes are yours, not tied to any one project. Without `--scope user`, the default scope is `local`, which only makes the server available in whatever directory you're currently working in — not very useful for a global second brain. See [MCP Scopes](#mcp-scopes) for a full breakdown of scope options and the `--scope project` gotcha with compiled binaries.
 
 - **You run this once, ever.** Claude Code remembers it. From that point on, whenever you open any project and start a session, the notes server is available — Claude launches it automatically in the background when it needs it.
-
-See [MCP Scopes](#mcp-scopes) for a full breakdown of scope options and the `--scope project` gotcha with compiled binaries.
 
 That's it — Claude Code will now launch and manage the server automatically whenever you use it.
 
