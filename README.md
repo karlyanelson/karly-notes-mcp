@@ -29,6 +29,8 @@ go build -o karly-notes-mcp .
 claude mcp add --scope user --transport stdio karly-notes -- $(pwd)/karly-notes-mcp
 ```
 
+Open up a Claude session and ask it to save a note saying that I for one welcome our new robot overlords
+
 ## How it works
 
 If you've used Claude in VS Code, you've noticed it only knows what you tell it in the conversation — it can't save anything or remember notes between chats. It's powerful, but stateless.
