@@ -353,12 +353,15 @@ karly-notes: connected
   Tools: add_note, get_note, list_notes, delete_note, search_notes
 ```
 
-If you see `connected` and your tools listed, the new binary is live and working. If you see `failed` or `disconnected`, double-check that the build succeeded (`go build` printed no errors) and that you're in a fresh session, not a resumed one.
+If you see `connected` and your tools listed, the new binary is live and working. If you see `failed` or `disconnected`, double-check that the build succeeded and printed no errors.
 
 ### Don't want to restart your session?
 
-There's no hot-reload command — the MCP server process is tied to the session lifecycle. Your options:
+You can reconnect the server from inside your current Claude session without restarting anything. It works the same way in both the terminal and VS Code:
 
-**In VS Code:** just open a new chat window. Your existing chat stays open with its full history; the new window gets a fresh MCP server process using the new binary. You don't lose anything.
+1. Type `/mcp` in the chat
+2. Select **"Manage MCP servers"**
+3. Select **karly-notes**
+4. Select **"Reconnect"**
 
-**In the terminal:** you need a new session. Run `exit` (or `Ctrl+C`) to close the current one, then `claude` to open a new one. The terminal session doesn't persist conversation history between runs anyway, so nothing is lost.
+Claude restarts just the MCP server process using the new binary. Your conversation context stays intact.
