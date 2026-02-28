@@ -1,3 +1,11 @@
+// main_test.go tests the MCP tools end-to-end by simulating what Claude does
+// at runtime.
+//
+// In production, Claude is the "client" — it sends tool call requests to this
+// server over stdin/stdout. In tests, we play the role of Claude ourselves:
+// we create a test client, connect it to the server over an in-memory
+// transport, and call tools the same way Claude would. This means the tests
+// exercise the full request/response path, not just isolated Go functions.
 package main
 
 import (
@@ -10,6 +18,9 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
+// setupTestServer creates a fresh MCP server backed by an in-memory store.
+// Using NoteStore (in-memory) instead of FileStore means tests run instantly
+// with no disk I/O and leave nothing on the machine when they finish.
 func setupTestServer() (*mcp.Server, *NoteStore) {
 	store := NewNoteStore()
 	server := mcp.NewServer(&mcp.Implementation{
@@ -21,11 +32,20 @@ func setupTestServer() (*mcp.Server, *NoteStore) {
 	return server, store
 }
 
+// connectTestClient wires a test MCP client to the server using an in-memory
+// transport. In production, Claude and the server communicate over stdin/stdout
+// (two OS pipes). mcp.NewInMemoryTransports() creates the same pipe
+// abstraction entirely in memory — no real file descriptors, no network.
+// This keeps tests fast and self-contained.
+//
+// The server goroutine MUST be started before client.Connect is called.
+// Connect blocks while it performs the MCP initialize handshake (exchanging
+// capability lists with the server). If the server isn't running yet, Connect
+// waits forever and the test hangs.
 func connectTestClient(t *testing.T, ctx context.Context, server *mcp.Server) *mcp.ClientSession {
 	t.Helper()
-	st, ct := mcp.NewInMemoryTransports()
-	// Start server FIRST so it's ready to handle the initialize handshake
-	go server.Run(ctx, st)
+	st, ct := mcp.NewInMemoryTransports() // st = server transport, ct = client transport
+	go server.Run(ctx, st)                // start server first — must be ready before Connect
 	client := mcp.NewClient(&mcp.Implementation{Name: "test", Version: "1.0"}, nil)
 	session, err := client.Connect(ctx, ct, nil)
 	if err != nil {
@@ -34,6 +54,12 @@ func connectTestClient(t *testing.T, ctx context.Context, server *mcp.Server) *m
 	return session
 }
 
+// callTool sends a tool call request to the server, exactly as Claude would.
+// Claude sends tool calls as JSON — the args map is marshalled to JSON here
+// to mirror that wire format.
+//
+// t.Helper() marks this as a helper function so that if it calls t.Fatal,
+// the failure is reported at the callsite in the test, not inside this function.
 func callTool(t *testing.T, ctx context.Context, session *mcp.ClientSession, name string, args any) *mcp.CallToolResult {
 	t.Helper()
 	argsJSON, err := json.Marshal(args)
@@ -50,6 +76,9 @@ func callTool(t *testing.T, ctx context.Context, session *mcp.ClientSession, nam
 	return result
 }
 
+// getText extracts the text string from a tool result's first content item.
+// All tools in this server return a single TextContent item, so this helper
+// avoids repeating the type assertion in every test.
 func getText(t *testing.T, result *mcp.CallToolResult) string {
 	t.Helper()
 	if len(result.Content) == 0 {
@@ -184,7 +213,7 @@ func TestGetNoteNotFound(t *testing.T) {
 }
 
 func TestFileStorePersistence(t *testing.T) {
-	dir := t.TempDir()
+	dir := t.TempDir() // creates a temp directory that is deleted when the test finishes
 
 	// Write a note with the first store instance.
 	fs1, err := NewFileStore(dir)

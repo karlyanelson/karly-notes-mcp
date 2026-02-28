@@ -6,6 +6,7 @@ Think of it as a scratchpad for things too small for a wiki but too important to
 
 ## Table of Contents
 
+- [How it works](#how-it-works)
 - [Setup](#setup)
 - [Tools](#tools)
 - [Build & Run](#build--run)
@@ -16,6 +17,34 @@ Think of it as a scratchpad for things too small for a wiki but too important to
 - [Persistence](#persistence)
 - [Making Changes](#making-changes-development-workflow)
 - [About MCP Servers](#about-mcp-servers)
+
+---
+
+## How it works
+
+If you've used Claude in VS Code, you've noticed it only knows what you tell it in the conversation — it can't save anything or remember notes between chats. It's powerful, but stateless.
+
+**MCP (Model Context Protocol)** is a standard that lets you give Claude new capabilities by connecting it to external programs. Those programs are called **MCP servers**, and the capabilities they expose are called **tools**.
+
+A tool is a function Claude is allowed to call. You don't call tools yourself — Claude decides when to use them based on what you're asking. If you say "save a note about Docker networking", Claude reads the available tools, picks `add_note`, infers the title and content from your message, and calls it. You never type the tool name.
+
+Here's the full flow for a message like *"save a note about JWT tokens"*:
+
+```
+You type a message
+       ↓
+Claude reads it and decides which tool to call (add_note)
+       ↓
+Claude calls add_note with { title: "...", content: "..." }
+       ↓
+This Go program receives the call, saves the note to disk, returns "Saved!"
+       ↓
+Claude reads the result and replies to you
+```
+
+This Go program is the MCP server. It runs silently in the background whenever you have a Claude session open. Claude launches it automatically as a subprocess and communicates with it over stdin/stdout. You never interact with it directly — you just talk to Claude normally.
+
+For more on how the subprocess communication works, see [MCP Transports](#mcp-transports).
 
 ---
 
@@ -79,6 +108,8 @@ That's it — Claude Code will now launch and manage the server automatically wh
 ---
 
 ## Tools
+
+Each tool is a function Claude can call. Claude reads the description to decide when to use it, and fills in the parameters based on context from your message.
 
 | Tool | Description | Parameters |
 |------|-------------|------------|

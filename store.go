@@ -1,3 +1,11 @@
+// store.go handles storing and retrieving notes.
+//
+// There are two implementations of the Store interface:
+//   - NoteStore  — in-memory only, used in tests (fast, no disk I/O)
+//   - FileStore  — persists notes to a JSON file on disk, used in production
+//
+// Both implement the same Store interface, so the tool handlers in tools.go
+// don't need to know or care which one they're talking to.
 package main
 
 import (
@@ -12,6 +20,12 @@ import (
 )
 
 // Note represents a single saved note.
+//
+// The `json:"..."` struct tags control how fields are named in the JSON file.
+// Without them, Go would use the capitalized field names (Title, Content, etc.)
+// as the JSON keys. The tags make the on-disk format use lowercase snake_case
+// keys instead (title, content, created_at, updated_at), which is conventional
+// for JSON.
 type Note struct {
 	Title     string `json:"title"`
 	Content   string `json:"content"`
@@ -32,6 +46,11 @@ type Store interface {
 // ── In-memory store (used by tests) ─────────────────────────────────────────
 
 // NoteStore is a thread-safe in-memory store for notes.
+//
+// Thread safety matters here because an MCP server can receive multiple tool
+// calls concurrently — for example, Claude might call list_notes and
+// search_notes at the same time. sync.RWMutex prevents data races by allowing
+// many simultaneous reads but only one write at a time.
 type NoteStore struct {
 	mu    sync.RWMutex
 	notes map[string]Note
@@ -43,11 +62,15 @@ func NewNoteStore() *NoteStore {
 
 func (s *NoteStore) Add(title, content string) error {
 	s.mu.Lock()
+	// defer schedules s.mu.Unlock() to run when this function returns,
+	// regardless of how it exits. This ensures the mutex is always released
+	// even if the function returns early or panics.
 	defer s.mu.Unlock()
 	now := time.Now().UTC().Format(time.RFC3339)
 	existing, exists := s.notes[title]
 	createdAt := now
 	if exists {
+		// Preserve the original creation time if the note already exists.
 		createdAt = existing.CreatedAt
 	}
 	s.notes[title] = Note{
@@ -60,7 +83,7 @@ func (s *NoteStore) Add(title, content string) error {
 }
 
 func (s *NoteStore) Get(title string) (Note, bool) {
-	s.mu.RLock()
+	s.mu.RLock() // RLock allows concurrent reads; no write is happening
 	defer s.mu.RUnlock()
 	n, ok := s.notes[title]
 	return n, ok
@@ -103,6 +126,8 @@ func (s *NoteStore) Search(keyword string) []Note {
 // ── File-backed store ────────────────────────────────────────────────────────
 
 // fileData is the on-disk JSON structure.
+// Wrapping notes in a versioned envelope (rather than storing a bare array)
+// makes it possible to migrate the format later without losing existing data.
 type fileData struct {
 	Version int             `json:"version"`
 	Notes   map[string]Note `json:"notes"`
