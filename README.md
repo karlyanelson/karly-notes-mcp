@@ -64,6 +64,8 @@ A few things to unpack:
 | `local` | *(default, no flag needed)* | Inside the target project's root directory | Project tools you don't want committed to git |
 
 > **`--scope project` tip:** Run the command from inside the project you want it scoped to, not from the `karly-notes-mcp/` directory. Also use an absolute path to the binary (not `$(pwd)/...`) since `$(pwd)` will resolve to that project's folder, not where the binary lives.
+>
+> **`--scope project` and compiled binaries don't mix well.** The `.mcp.json` file stores the absolute path to the binary on *your* machine — something like `/Users/yourname/workspace/karly-notes-mcp/karly-notes-mcp`. When a teammate clones the repo, that path won't exist on their machine, so the server will fail to launch for them even if they've built the binary themselves. `--scope project` works best for servers that use a universal command like `npx some-package` (same on every machine) or a remote URL. For a compiled binary, every developer needs to register it themselves with `--scope user` or `--scope local` using their own path.
 
 That's it — Claude Code will now launch and manage the server automatically whenever you use it.
 
