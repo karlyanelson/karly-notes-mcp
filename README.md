@@ -57,11 +57,13 @@ A few things to unpack:
 
 **Scope cheat sheet** — when to use each:
 
-| Scope | Command flag | Good for |
-|-------|-------------|----------|
-| `user` | `--scope user` | Personal tools you want everywhere (like this server) |
-| `project` | `--scope project` | Team tools committed to a repo (e.g. a DB client for this codebase) |
-| `local` | *(default, no flag needed)* | Quick experiments, or project tools you don't want committed to git |
+| Scope | Command flag | Where to run the command | Good for |
+|-------|-------------|--------------------------|----------|
+| `user` | `--scope user` | Anywhere — it's global | Personal tools you want everywhere (like this server) |
+| `project` | `--scope project` | Inside the target project's root directory | Team tools shared via the repo — saves a `.mcp.json` file that teammates get when they clone |
+| `local` | *(default, no flag needed)* | Inside the target project's root directory | Project tools you don't want committed to git |
+
+> **`--scope project` tip:** Run the command from inside the project you want it scoped to, not from the `karly-notes-mcp/` directory. Also use an absolute path to the binary (not `$(pwd)/...`) since `$(pwd)` will resolve to that project's folder, not where the binary lives.
 
 That's it — Claude Code will now launch and manage the server automatically whenever you use it.
 
