@@ -39,6 +39,7 @@ import (
 type AddNoteInput struct {
 	Title   string `json:"title" jsonschema:"title of the note"`
 	Content string `json:"content" jsonschema:"content/body of the note"`
+	Repo    string `json:"repo" jsonschema:"git remote origin URL of the current repository (e.g. github.com/user/repo). Empty string if not in a git repo."`
 }
 
 type GetNoteInput struct {
@@ -55,9 +56,13 @@ type SearchNotesInput struct {
 	Keyword string `json:"keyword" jsonschema:"keyword to search for in note titles and content"`
 }
 
+type ListNotesForCurrentRepoInput struct {
+	Repo string `json:"repo" jsonschema:"git remote origin URL of the current repository (e.g. github.com/user/repo)"`
+}
+
 // ── Tool registration ────────────────────────────────────────────────────────
 
-// registerTools attaches all five note tools to the MCP server.
+// registerTools attaches all six note tools to the MCP server.
 // It is called once at startup in main.go. After this point, Claude knows the
 // tools exist and can call any of them at any point during a conversation.
 func registerTools(server *mcp.Server, store Store) {
@@ -101,7 +106,7 @@ func registerTools(server *mcp.Server, store Store) {
 				IsError: true,
 			}, nil, nil
 		}
-		if err := store.Add(input.Title, input.Content); err != nil {
+		if err := store.Add(input.Title, input.Content, input.Repo); err != nil {
 			return &mcp.CallToolResult{
 				Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("Error saving note: %v", err)}},
 				IsError: true,
@@ -127,7 +132,7 @@ func registerTools(server *mcp.Server, store Store) {
 				IsError: true,
 			}, nil, nil
 		}
-		text := fmt.Sprintf("# %s\n\n%s\n\nCreated: %s\nUpdated: %s", note.Title, note.Content, note.CreatedAt, note.UpdatedAt)
+		text := fmt.Sprintf("# %s\n\n%s\n\nRepo: %s\nCreated: %s\nUpdated: %s", note.Title, note.Content, note.Repo, note.CreatedAt, note.UpdatedAt)
 		return &mcp.CallToolResult{
 			Content: []mcp.Content{&mcp.TextContent{Text: text}},
 		}, nil, nil
@@ -197,6 +202,33 @@ func registerTools(server *mcp.Server, store Store) {
 		var sb strings.Builder
 		sb.WriteString(fmt.Sprintf("Found %d note(s) matching %q:\n\n", len(results), input.Keyword))
 		for _, n := range results {
+			sb.WriteString(fmt.Sprintf("## %s\n%s\n\n", n.Title, n.Content))
+		}
+		return &mcp.CallToolResult{
+			Content: []mcp.Content{&mcp.TextContent{Text: sb.String()}},
+		}, nil, nil
+	})
+
+	// ── list_notes_for_current_repo ───────────────────────────────────────────
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "list_notes_for_current_repo",
+		Description: "List all notes saved in a specific repository. Use this to surface relevant notes when starting work in a project.",
+	}, func(ctx context.Context, req *mcp.CallToolRequest, input ListNotesForCurrentRepoInput) (*mcp.CallToolResult, any, error) {
+		if input.Repo == "" {
+			return &mcp.CallToolResult{
+				Content: []mcp.Content{&mcp.TextContent{Text: "Error: repo is required"}},
+				IsError: true,
+			}, nil, nil
+		}
+		notes := store.ListByRepo(input.Repo)
+		if len(notes) == 0 {
+			return &mcp.CallToolResult{
+				Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("No notes found for repo: %s", input.Repo)}},
+			}, nil, nil
+		}
+		var sb strings.Builder
+		sb.WriteString(fmt.Sprintf("Found %d note(s) for %s:\n\n", len(notes), input.Repo))
+		for _, n := range notes {
 			sb.WriteString(fmt.Sprintf("## %s\n%s\n\n", n.Title, n.Content))
 		}
 		return &mcp.CallToolResult{

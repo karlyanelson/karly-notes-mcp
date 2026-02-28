@@ -97,10 +97,11 @@ func TestAddAndGetNote(t *testing.T) {
 	session := connectTestClient(t, ctx, server)
 	defer session.Close()
 
-	// Add a note
+	// Add a note with a repo
 	result := callTool(t, ctx, session, "add_note", map[string]string{
 		"title":   "test note",
 		"content": "hello world",
+		"repo":    "github.com/test/my-app",
 	})
 	text := getText(t, result)
 	if text != `Saved note: "test note"` {
@@ -134,8 +135,8 @@ func TestListNotes(t *testing.T) {
 	}
 
 	// Add some notes
-	store.Add("note1", "content1")
-	store.Add("note2", "content2")
+	store.Add("note1", "content1", "")
+	store.Add("note2", "content2", "")
 
 	result = callTool(t, ctx, session, "list_notes", map[string]string{})
 	text = getText(t, result)
@@ -150,7 +151,7 @@ func TestDeleteNote(t *testing.T) {
 	session := connectTestClient(t, ctx, server)
 	defer session.Close()
 
-	store.Add("to-delete", "bye")
+	store.Add("to-delete", "bye", "")
 
 	// Delete existing
 	result := callTool(t, ctx, session, "delete_note", map[string]string{"title": "to-delete"})
@@ -172,8 +173,8 @@ func TestSearchNotes(t *testing.T) {
 	session := connectTestClient(t, ctx, server)
 	defer session.Close()
 
-	store.Add("JWT timezone gotcha", "normalize to UTC before comparing expiry")
-	store.Add("Docker networking", "use bridge mode for local dev")
+	store.Add("JWT timezone gotcha", "normalize to UTC before comparing expiry", "github.com/test/auth-service")
+	store.Add("Docker networking", "use bridge mode for local dev", "github.com/test/infra")
 
 	// Search matching
 	result := callTool(t, ctx, session, "search_notes", map[string]string{"keyword": "JWT"})
@@ -200,6 +201,45 @@ func TestSearchNotes(t *testing.T) {
 	}
 }
 
+func TestListNotesForCurrentRepo(t *testing.T) {
+	server, store := setupTestServer()
+	ctx := context.Background()
+	session := connectTestClient(t, ctx, server)
+	defer session.Close()
+
+	store.Add("JWT gotcha", "normalize to UTC", "github.com/test/auth-service")
+	store.Add("Docker tip", "use bridge mode", "github.com/test/infra")
+	store.Add("Go modules", "always use go mod tidy", "github.com/test/auth-service")
+	store.Add("General note", "not in any repo", "")
+
+	// List notes for a specific repo
+	result := callTool(t, ctx, session, "list_notes_for_current_repo", map[string]string{
+		"repo": "github.com/test/auth-service",
+	})
+	text := getText(t, result)
+	if !strings.Contains(text, "2 note(s)") {
+		t.Errorf("expected 2 notes for auth-service, got: %s", text)
+	}
+	if !strings.Contains(text, "JWT gotcha") {
+		t.Errorf("expected JWT gotcha in results, got: %s", text)
+	}
+	if !strings.Contains(text, "Go modules") {
+		t.Errorf("expected Go modules in results, got: %s", text)
+	}
+	if strings.Contains(text, "Docker") {
+		t.Errorf("did not expect Docker note in auth-service results")
+	}
+
+	// No notes for an unknown repo
+	result = callTool(t, ctx, session, "list_notes_for_current_repo", map[string]string{
+		"repo": "github.com/test/unknown",
+	})
+	text = getText(t, result)
+	if !strings.Contains(text, "No notes found") {
+		t.Errorf("expected no results for unknown repo, got: %s", text)
+	}
+}
+
 func TestGetNoteNotFound(t *testing.T) {
 	server, _ := setupTestServer()
 	ctx := context.Background()
@@ -220,7 +260,7 @@ func TestFileStorePersistence(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewFileStore: %v", err)
 	}
-	if err := fs1.Add("persist-test", "this should survive a restart"); err != nil {
+	if err := fs1.Add("persist-test", "this should survive a restart", "github.com/test/my-app"); err != nil {
 		t.Fatalf("Add: %v", err)
 	}
 
@@ -239,7 +279,7 @@ func TestFileStorePersistence(t *testing.T) {
 
 	// Verify CreatedAt is preserved on update (not reset to now).
 	originalCreatedAt := note.CreatedAt
-	if err := fs2.Add("persist-test", "updated content"); err != nil {
+	if err := fs2.Add("persist-test", "updated content", "github.com/test/my-app"); err != nil {
 		t.Fatalf("Add (update): %v", err)
 	}
 	updated, _ := fs2.Get("persist-test")

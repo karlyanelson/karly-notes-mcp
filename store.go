@@ -29,6 +29,7 @@ import (
 type Note struct {
 	Title     string `json:"title"`
 	Content   string `json:"content"`
+	Repo      string `json:"repo"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 }
@@ -36,9 +37,10 @@ type Note struct {
 // Store is the interface implemented by both NoteStore (in-memory, used in
 // tests) and FileStore (persistent, used in production).
 type Store interface {
-	Add(title, content string) error
+	Add(title, content, repo string) error
 	Get(title string) (Note, bool)
 	List() []Note
+	ListByRepo(repo string) []Note
 	Delete(title string) (bool, error)
 	Search(keyword string) []Note
 }
@@ -60,7 +62,7 @@ func NewNoteStore() *NoteStore {
 	return &NoteStore{notes: make(map[string]Note)}
 }
 
-func (s *NoteStore) Add(title, content string) error {
+func (s *NoteStore) Add(title, content, repo string) error {
 	s.mu.Lock()
 	// defer schedules s.mu.Unlock() to run when this function returns,
 	// regardless of how it exits. This ensures the mutex is always released
@@ -76,6 +78,7 @@ func (s *NoteStore) Add(title, content string) error {
 	s.notes[title] = Note{
 		Title:     title,
 		Content:   content,
+		Repo:      repo,
 		CreatedAt: createdAt,
 		UpdatedAt: now,
 	}
@@ -95,6 +98,18 @@ func (s *NoteStore) List() []Note {
 	result := make([]Note, 0, len(s.notes))
 	for _, n := range s.notes {
 		result = append(result, n)
+	}
+	return result
+}
+
+func (s *NoteStore) ListByRepo(repo string) []Note {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	var result []Note
+	for _, n := range s.notes {
+		if n.Repo == repo {
+			result = append(result, n)
+		}
 	}
 	return result
 }
@@ -187,7 +202,7 @@ func (fs *FileStore) save() error {
 	return os.Rename(tmp, fs.path)
 }
 
-func (fs *FileStore) Add(title, content string) error {
+func (fs *FileStore) Add(title, content, repo string) error {
 	fs.mu.Lock()
 	defer fs.mu.Unlock()
 	now := time.Now().UTC().Format(time.RFC3339)
@@ -199,6 +214,7 @@ func (fs *FileStore) Add(title, content string) error {
 	fs.data.Notes[title] = Note{
 		Title:     title,
 		Content:   content,
+		Repo:      repo,
 		CreatedAt: createdAt,
 		UpdatedAt: now,
 	}
@@ -218,6 +234,18 @@ func (fs *FileStore) List() []Note {
 	result := make([]Note, 0, len(fs.data.Notes))
 	for _, n := range fs.data.Notes {
 		result = append(result, n)
+	}
+	return result
+}
+
+func (fs *FileStore) ListByRepo(repo string) []Note {
+	fs.mu.RLock()
+	defer fs.mu.RUnlock()
+	var result []Note
+	for _, n := range fs.data.Notes {
+		if n.Repo == repo {
+			result = append(result, n)
+		}
 	}
 	return result
 }

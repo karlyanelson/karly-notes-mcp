@@ -123,9 +123,10 @@ Each tool is a function Claude can call. Claude reads the description to decide 
 
 | Tool | Description | Parameters |
 |------|-------------|------------|
-| `add_note` | Save a note (or update an existing one by title) | `title` (string), `content` (string) |
+| `add_note` | Save a note (or update an existing one by title) | `title` (string), `content` (string), `repo` (string) |
 | `get_note` | Retrieve a note by its exact title | `title` (string) |
 | `list_notes` | List all saved notes with titles and creation dates | _(none)_ |
+| `list_notes_for_current_repo` | List all notes saved in a specific repository | `repo` (string) |
 | `delete_note` | Remove a note by title | `title` (string) |
 | `search_notes` | Find notes matching a keyword (case-insensitive, searches title + content) | `keyword` (string) |
 
@@ -285,10 +286,11 @@ go test -v -run TestFileStorePersistence .
 | `TestListNotes` | Empty list response, then listing after notes are added |
 | `TestDeleteNote` | Deleting an existing note; error on deleting one that doesn't exist |
 | `TestSearchNotes` | Keyword match, no-match, and case-insensitive search |
+| `TestListNotesForCurrentRepo` | Filtering notes by repo, no-match for unknown repo |
 | `TestGetNoteNotFound` | Error response when a note title doesn't exist |
 | `TestFileStorePersistence` | Notes survive a "restart" (write → new instance → read), `created_at` is preserved on update, deletions persist to disk, JSON file is valid |
 
-The first five tests use an in-memory store so they run instantly with no disk I/O. `TestFileStorePersistence` uses Go's `t.TempDir()` — a temporary folder that's automatically cleaned up after the test, so it never leaves anything on your machine.
+The first six tests use an in-memory store so they run instantly with no disk I/O. `TestFileStorePersistence` uses Go's `t.TempDir()` — a temporary folder that's automatically cleaned up after the test, so it never leaves anything on your machine.
 
 ## Current Limitations
 
@@ -330,6 +332,7 @@ claude mcp add --transport stdio karly-notes \
     "JWT timezone gotcha": {
       "title": "JWT timezone gotcha",
       "content": "When validating tokens, always normalize to UTC before comparing expiry.",
+      "repo": "github.com/you/my-app",
       "created_at": "2025-03-15T10:30:00Z",
       "updated_at": "2025-03-15T10:30:00Z"
     }
