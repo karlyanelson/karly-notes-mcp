@@ -31,7 +31,7 @@ The server communicates over stdio using the MCP JSON-RPC protocol. You don't ru
 Claude Code has a built-in command for registering MCP servers — no JSON editing required:
 
 ```bash
-claude mcp add --transport stdio karly-notes -- /Users/karlynelson/workspace/karly-notes-mcp/karly-notes-mcp
+claude mcp add --transport stdio karly-notes -- /absolute/path/to/binary/karly-notes-mcp/karly-notes-mcp
 ```
 
 Verify it was added:
@@ -68,7 +68,7 @@ If you prefer to edit config directly, add to `~/.claude/claude_desktop_config.j
 {
   "mcpServers": {
     "karly-notes": {
-      "command": "/Users/karlynelson/workspace/karly-notes-mcp/karly-notes-mcp"
+      "command": "/absolute/path/to/binary/karly-notes-mcp/karly-notes-mcp"
     }
   }
 }
@@ -83,7 +83,7 @@ Add to your MCP settings:
   "mcp": {
     "servers": {
       "karly-notes": {
-        "command": "/Users/karlynelson/workspace/karly-notes-mcp/karly-notes-mcp"
+        "command": "/absolute/path/to/binary/karly-notes-mcp/karly-notes-mcp"
       }
     }
   }
@@ -132,40 +132,41 @@ Claude calls `search_notes` with "JWT", finds it, and surfaces exactly what you 
 ## Running Tests
 
 ```bash
-go test -v ./...
+go test -v .
 ```
 
 ## Current Limitations
 
-- Notes are stored in memory and lost when the server restarts
 - No tags or categories (search by keyword only)
 - No import/export
 
-## Future Design: File-Based Persistence
+## Persistence
 
-The current in-memory store is great for getting started, but notes disappear when the server restarts. The next step is persisting notes to disk.
+Notes are stored in a JSON file on your local machine. The file is created automatically on first run.
 
-### Approach: Single JSON File
-
-Store all notes in one file at a well-known location:
+### Default location
 
 ```
 ~/.karly-notes/notes.json
 ```
 
-**Why a single file instead of one file per note:**
+### Changing the location
 
-- Simpler to back up, sync, or version control (one file to track)
-- Atomic operations are easier — write the whole file in one go
-- No filename sanitization issues (note titles can contain anything)
-- For the expected volume (tens to hundreds of notes), a single file is perfectly fast
-- Easier to inspect and manually edit if needed
+Pass `--notes-dir` when registering the server:
 
-**When to consider splitting into multiple files:**
+```bash
+claude mcp add --transport stdio karly-notes -- /path/to/karly-notes-mcp --notes-dir /path/to/your/notes
+```
 
-If the note count grows into thousands, or if individual notes contain very large content (embedded images, long logs), a directory-per-note structure would avoid rewriting the entire file on every change. But that's a bridge to cross later.
+Or set the `KARLY_NOTES_DIR` environment variable:
 
-### File Format
+```bash
+claude mcp add --transport stdio karly-notes \
+  --env KARLY_NOTES_DIR=/path/to/your/notes \
+  -- /path/to/karly-notes-mcp
+```
+
+### File format
 
 ```json
 {
@@ -173,40 +174,23 @@ If the note count grows into thousands, or if individual notes contain very larg
   "notes": {
     "JWT timezone gotcha": {
       "title": "JWT timezone gotcha",
-      "content": "When validating tokens, always normalize to UTC...",
+      "content": "When validating tokens, always normalize to UTC before comparing expiry.",
       "created_at": "2025-03-15T10:30:00Z",
       "updated_at": "2025-03-15T10:30:00Z"
-    },
-    "Docker compose gotcha": {
-      "title": "Docker compose gotcha",
-      "content": "If you get bind: address already in use...",
-      "created_at": "2025-03-16T14:20:00Z",
-      "updated_at": "2025-03-16T14:20:00Z"
     }
   }
 }
 ```
 
-The `version` field allows migrating the format later without breaking existing files.
+The file is plain JSON — you can read, edit, back up, or sync it with any tool you like (iCloud Drive, Dropbox, git, etc.). The `version` field is reserved for future format migrations.
 
-### Implementation Plan
+### How writes work
 
-1. **`FileStore` struct** that implements the same interface as the current in-memory `NoteStore`
-2. **Load on startup**: read `~/.karly-notes/notes.json` into memory (create with empty notes if missing)
-3. **Write on mutation**: after every `add_note` or `delete_note`, write the full file back to disk
-4. **Atomic writes**: write to a temp file first, then rename — prevents corruption if the process is killed mid-write
-5. **Configurable path**: allow overriding the notes directory via a `--notes-dir` flag or `KARLY_NOTES_DIR` environment variable
-
-### Atomic Write Strategy
+Every mutation (`add_note`, `delete_note`) writes to disk atomically:
 
 ```
-write to ~/.karly-notes/notes.json.tmp
-fsync
-rename ~/.karly-notes/notes.json.tmp -> ~/.karly-notes/notes.json
+write → ~/.karly-notes/notes.json.tmp
+rename → ~/.karly-notes/notes.json
 ```
 
-This ensures the file is never in a half-written state. The rename is atomic on all major filesystems.
-
-### Migration Path
-
-The switch from in-memory to file-based is a one-line change in `main()` — swap `NewNoteStore()` for `NewFileStore(path)`. Both implement the same methods, so no tool handler changes are needed.
+The rename is atomic on all major filesystems, so the file is never left in a half-written state even if the process is killed mid-write.
