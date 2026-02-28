@@ -4,6 +4,21 @@ A personal "second brain" MCP server that lets an AI agent save, retrieve, searc
 
 Think of it as a scratchpad for things too small for a wiki but too important to lose.
 
+## Table of Contents
+
+- [Setup](#setup)
+- [Tools](#tools)
+- [Build & Run](#build--run)
+- [Configuration](#configuration)
+- [Usage Examples](#usage-examples)
+- [Running Tests](#running-tests)
+- [Current Limitations](#current-limitations)
+- [Persistence](#persistence)
+- [Making Changes](#making-changes-development-workflow)
+- [About MCP Servers](#about-mcp-servers)
+
+---
+
 ## Setup
 
 ### 1. Install Go
@@ -57,17 +72,7 @@ A few things to unpack:
 
 - **You run this once, ever.** Claude Code remembers it. From that point on, whenever you open any project and start a session, the notes server is available — Claude launches it automatically in the background when it needs it.
 
-**Scope cheat sheet** — when to use each:
-
-| Scope | Command flag | Where to run the command | Good for |
-|-------|-------------|--------------------------|----------|
-| `user` | `--scope user` | Anywhere — it's global | Personal tools you want everywhere (like this server) |
-| `project` | `--scope project` | Inside the target project's root directory | Team tools shared via the repo — saves a `.mcp.json` file that teammates get when they clone |
-| `local` | *(default, no flag needed)* | Inside the target project's root directory | Project tools you don't want committed to git |
-
-> **`--scope project` tip:** Run the command from inside the project you want it scoped to, not from the `karly-notes-mcp/` directory. Also use an absolute path to the binary (not `$(pwd)/...`) since `$(pwd)` will resolve to that project's folder, not where the binary lives.
->
-> **`--scope project` and compiled binaries don't mix well.** The `.mcp.json` file stores the absolute path to the binary on *your* machine — something like `/Users/yourname/workspace/karly-notes-mcp/karly-notes-mcp`. When a teammate clones the repo, that path won't exist on their machine, so the server will fail to launch for them even if they've built the binary themselves. `--scope project` works best for servers that use a universal command like `npx some-package` (same on every machine) or a remote URL. For a compiled binary, every developer needs to register it themselves with `--scope user` or `--scope local` using their own path.
+See [MCP Scopes](#mcp-scopes) for a full breakdown of scope options and the `--scope project` gotcha with compiled binaries.
 
 That's it — Claude Code will now launch and manage the server automatically whenever you use it.
 
@@ -123,13 +128,7 @@ Remove it if needed:
 claude mcp remove karly-notes
 ```
 
-**Scope options** (pass `--scope <value>` to `mcp add`):
-
-| Scope | Where it's saved | Use when |
-|-------|-----------------|----------|
-| `local` (default) | `~/.claude.json` | Private to you in the current project |
-| `user` | `~/.claude.json` | Available across all your projects |
-| `project` | `.mcp.json` in repo | Shared with teammates via version control |
+See [MCP Scopes](#mcp-scopes) for a full breakdown of scope options.
 
 ### Claude Code (manual JSON)
 
@@ -370,13 +369,15 @@ Claude restarts just the MCP server process using the new binary. Your conversat
 
 ---
 
-## MCP Transports
+## About MCP Servers
+
+### MCP Transports
 
 The `--transport` flag in `claude mcp add` tells Claude *how* to communicate with the MCP server — what channel to use to send and receive messages.
 
 There are two transports you'll encounter:
 
-### `stdio` (Standard I/O)
+#### `stdio` (Standard I/O)
 
 Claude launches the binary as a **child process** and talks to it by writing to its `stdin` and reading from its `stdout`. It's pure inter-process communication — no network, no ports, no URLs. The process starts when your Claude session starts and exits when it ends.
 
@@ -392,7 +393,7 @@ Both sides have to agree on the transport. The binary says "I speak stdio" and `
 
 **Use `stdio` for:** local binaries running on your machine — like this server.
 
-### `http`
+#### `http`
 
 Claude connects to a **remote server** over the network via HTTP. The server is already running somewhere (a hosted URL), and Claude just points at it.
 
@@ -404,6 +405,20 @@ claude mcp add --transport http my-server https://my-server.example.com/mcp
 
 **Use `http` for:** hosted or shared MCP servers running in the cloud.
 
+For this server, `stdio` is always the right choice — it's a local binary that lives on your machine.
+
 ---
 
-For this server, `stdio` is always the right choice — it's a local binary that lives on your machine.
+### MCP Scopes
+
+The `--scope` flag controls where the registration is saved and which projects can see the server.
+
+| Scope | Command flag | Where to run the command | Good for |
+|-------|-------------|--------------------------|----------|
+| `user` | `--scope user` | Anywhere — it's global | Personal tools you want everywhere (like this server) |
+| `project` | `--scope project` | Inside the target project's root directory | Team tools shared via the repo — saves a `.mcp.json` file that teammates get when they clone |
+| `local` | *(default, no flag needed)* | Inside the target project's root directory | Project tools you don't want committed to git |
+
+> **`--scope project` tip:** Run the command from inside the project you want it scoped to, not from the `karly-notes-mcp/` directory. Also use an absolute path to the binary (not `$(pwd)/...`) since `$(pwd)` will resolve to that project's folder, not where the binary lives.
+>
+> **`--scope project` and compiled binaries don't mix well.** The `.mcp.json` file stores the absolute path to the binary on *your* machine — something like `/Users/yourname/workspace/karly-notes-mcp/karly-notes-mcp`. When a teammate clones the repo, that path won't exist on their machine, so the server will fail to launch for them even if they've built the binary themselves. `--scope project` works best for servers that use a universal command like `npx some-package` (same on every machine) or a remote URL. For a compiled binary, every developer needs to register it themselves with `--scope user` or `--scope local` using their own path.
