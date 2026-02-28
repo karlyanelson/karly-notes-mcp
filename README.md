@@ -307,3 +307,58 @@ rename → ~/.karly-notes/notes.json
 ```
 
 The rename is atomic on all major filesystems, so the file is never left in a half-written state even if the process is killed mid-write.
+
+---
+
+## Making Changes (Development Workflow)
+
+If you fork this repo and make changes to the Go source files, here's what you need to do:
+
+### Step 1 — Rebuild the binary
+
+```bash
+go build -o karly-notes-mcp .
+```
+
+This overwrites the existing binary in place at the same path. You do not need to re-run `claude mcp add` — that was a one-time registration. Claude Code stored the path to the binary; as long as you rebuild to the same location, the registered path stays valid forever.
+
+### Step 2 — Start a new Claude session
+
+Claude launches the MCP server binary fresh at the start of each session. Your current session won't pick up the new binary — you need to open a new one.
+
+**In the terminal (Claude Code CLI):**
+
+Exit your current session if one is open, then start a new one:
+
+```bash
+claude
+```
+
+**In VS Code (Claude extension):**
+
+Open the Command Palette (`Cmd+Shift+P` on Mac, `Ctrl+Shift+P` on Windows/Linux), search for **"Claude: New Chat"**, and open a new chat window. The extension starts a fresh session — and a fresh MCP server process — for each new chat.
+
+### Step 3 — Verify the server connected
+
+Once you're in a new session, type this into the chat:
+
+```
+/mcp
+```
+
+This is a built-in Claude Code command (not a message sent to the AI — think of it like a slash command in Slack). It shows you the status of all registered MCP servers. You should see something like:
+
+```
+karly-notes: connected
+  Tools: add_note, get_note, list_notes, delete_note, search_notes
+```
+
+If you see `connected` and your tools listed, the new binary is live and working. If you see `failed` or `disconnected`, double-check that the build succeeded (`go build` printed no errors) and that you're in a fresh session, not a resumed one.
+
+### Don't want to restart your session?
+
+There's no hot-reload command — the MCP server process is tied to the session lifecycle. Your options:
+
+**In VS Code:** just open a new chat window. Your existing chat stays open with its full history; the new window gets a fresh MCP server process using the new binary. You don't lose anything.
+
+**In the terminal:** you need a new session. Run `exit` (or `Ctrl+C`) to close the current one, then `claude` to open a new one. The terminal session doesn't persist conversation history between runs anyway, so nothing is lost.
