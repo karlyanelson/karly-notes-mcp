@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "mcp__karly-notes__add_note",
-      "mcp__karly-notes__search_notes"
+      "mcp__karly-notes__search_notes",
+      "mcp__karly-notes__delete_note"
     ]
   }
 }

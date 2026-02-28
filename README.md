@@ -131,7 +131,7 @@ Claude calls `search_notes` with "JWT", finds it, and surfaces exactly what you 
 
 ## Running Tests
 
-> **Coming from JavaScript?** Go has testing built in — no need to install Jest, Vitest, or any test library. The `go test` command is part of the language itself, the same way `node` is. Test files live right next to the source files they test (not in a separate `__tests__` folder), and any file ending in `_test.go` is automatically picked up.
+> Go has testing built in — no need to install Jest, Vitest, or any test library. The `go test` command is part of the language itself, the same way `node` is. Test files live right next to the source files they test (not in a separate `__tests__` folder), and any file ending in `_test.go` is automatically picked up.
 
 ### Run all tests
 
