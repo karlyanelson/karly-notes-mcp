@@ -6,6 +6,7 @@ Think of it as a scratchpad for things too small for a wiki but too important to
 
 ## Table of Contents
 
+- [Quick Start](#quick-start)
 - [How it works](#how-it-works)
 - [Setup](#setup)
 - [Tools](#tools)
