@@ -6,8 +6,6 @@ Think of it as a scratchpad for things too small for a wiki but too important to
 
 ## Setup
 
-> **First time with Go?** Go is a compiled language — unlike JavaScript where you run source files directly with `node`, Go source code has to be compiled into a binary first. Think of it like a build step that produces a standalone executable, similar to `npm run build` producing a `dist/` folder. You only need to do this once (or again after pulling changes).
-
 ### 1. Install Go
 
 Check if you already have it:
@@ -32,6 +30,8 @@ cd karly-notes-mcp
 ```
 
 ### 3. Build the binary
+
+> **First time with Go?** Go is a compiled language — unlike JavaScript where you run source files directly with `node`, Go source code has to be compiled into a binary first. Think of it like a build step that produces a standalone executable, similar to `npm run build` producing a `dist/` folder. You only need to do this once (or again after pulling changes).
 
 ```bash
 go build -o karly-notes-mcp .
