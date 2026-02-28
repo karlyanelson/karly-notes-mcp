@@ -3,3 +3,7 @@ karly-notes-mcp
 
 # macOS
 .DS_Store
+
+
+# Local claude settings
+.claude/settings.local.json
