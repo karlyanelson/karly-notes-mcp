@@ -95,6 +95,28 @@ Each skill maps to one CLI command:
 | `skills/search-notes/` | `karly-notes-cli search` |
 | `skills/list-notes-for-repo/` | `karly-notes-cli list-by-repo` |
 
+## Updating the Plugin After Local Changes
+
+When you edit skill files (e.g. `skills/add-note/SKILL.md`) or the CLI, the changes only exist in your local workspace. The installed plugin runs from a **cached copy** at `~/.claude/plugins/cache/karly-notes/`. To pick up your changes:
+
+1. **Commit your changes** — the plugin cache is pinned to a git commit SHA, so uncommitted changes won't be picked up.
+
+   ```bash
+   git add -A && git commit -m "update skill instructions"
+   ```
+
+2. **Update the plugin** — in a Claude Code session, run:
+
+   ```
+   /plugin
+   ```
+
+   Then select the `karly-notes` plugin and choose **Update**. This re-caches the plugin from your latest commit.
+
+3. **Restart Claude Code** — start a new session so the updated skill instructions are loaded.
+
+If you've bumped the version in `marketplace.json` and `.claude-plugin/plugin.json`, Claude Code may prompt you to update automatically. For local development, keeping the version the same and manually updating is usually easiest.
+
 ## Further Reading
 
 - [What are Agent Skills?](https://agentskills.io/what-are-skills)

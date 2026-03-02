@@ -15,7 +15,19 @@ Use this skill when the user wants to:
 
 ## How to save a note
 
-Run the CLI with the `add` command:
+### Step 1: Detect the current repo
+
+If the user is working inside a git repository, automatically detect the repo URL:
+
+```bash
+git remote get-url origin 2>/dev/null
+```
+
+If this returns a URL, pass it as the `--repo` flag. Strip any `https://` or `git@` prefix and `.git` suffix to normalize it (e.g. `https://github.com/user/repo.git` becomes `github.com/user/repo`).
+
+If the command fails (not a git repo or no remote), omit `--repo`.
+
+### Step 2: Run the CLI
 
 ```bash
 karly-notes-cli add --title "TITLE" --content "CONTENT" [--repo "REPO"]
@@ -25,7 +37,7 @@ karly-notes-cli add --title "TITLE" --content "CONTENT" [--repo "REPO"]
 
 - `--title` (required): A short, descriptive title for the note.
 - `--content` (required): The body of the note. Can be multi-line.
-- `--repo` (optional): The git remote origin URL if this note is associated with a specific repository (e.g. `github.com/user/repo`).
+- `--repo` (auto-detected): The normalized git remote origin URL. Auto-detect from the current repo unless the user explicitly provides a different value.
 
 ### Output
 
