@@ -1,0 +1,14 @@
+{
+  "name": "karly-notes",
+  "owner": {
+    "name": "Karly Nelson"
+  },
+  "plugins": [
+    {
+      "name": "karly-notes",
+      "source": "./",
+      "description": "Note-taking skills backed by the karly-notes-cli — add, get, list, search, and delete persistent notes",
+      "version": "1.0.0"
+    }
+  ]
+}

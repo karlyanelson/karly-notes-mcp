@@ -48,7 +48,7 @@ Add the build output directory to your shell profile so the binary is always ava
 
 ```bash
 # Add to ~/.zshrc (or ~/.bashrc)
-export PATH="/path/to/karly-notes-mcp/skills-playground/karly-notes-cli:$PATH"
+export PATH="$HOME/path/to/karly-notes-mcp/skills-playground/karly-notes-cli:$PATH"
 ```
 
 Then reload your shell (`source ~/.zshrc`) or open a new terminal.
@@ -56,6 +56,8 @@ Then reload your shell (`source ~/.zshrc`) or open a new terminal.
 ### 3. Install the skills as a Claude Code plugin
 
 This directory is a Claude Code plugin. Installing it once makes the skills available in every project, and they stay up to date automatically when you `git pull`.
+
+Run these commands in a terminal after typing `claude` (You need claude code CLI installed)
 
 ```bash
 # Add this repo as a local plugin marketplace
