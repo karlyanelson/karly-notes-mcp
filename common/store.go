@@ -1,12 +1,13 @@
-// store.go handles storing and retrieving notes.
+// Package common provides shared note storage used by both the MCP server
+// and the CLI.
 //
 // There are two implementations of the Store interface:
 //   - NoteStore  — in-memory only, used in tests (fast, no disk I/O)
 //   - FileStore  — persists notes to a JSON file on disk, used in production
 //
-// Both implement the same Store interface, so the tool handlers in tools.go
-// don't need to know or care which one they're talking to.
-package main
+// Both implement the same Store interface, so consumers don't need to know
+// or care which one they're talking to.
+package common
 
 import (
 	"encoding/json"
@@ -64,15 +65,11 @@ func NewNoteStore() *NoteStore {
 
 func (s *NoteStore) Add(title, content, repo string) error {
 	s.mu.Lock()
-	// defer schedules s.mu.Unlock() to run when this function returns,
-	// regardless of how it exits. This ensures the mutex is always released
-	// even if the function returns early or panics.
 	defer s.mu.Unlock()
 	now := time.Now().UTC().Format(time.RFC3339)
 	existing, exists := s.notes[title]
 	createdAt := now
 	if exists {
-		// Preserve the original creation time if the note already exists.
 		createdAt = existing.CreatedAt
 	}
 	s.notes[title] = Note{
@@ -86,7 +83,7 @@ func (s *NoteStore) Add(title, content, repo string) error {
 }
 
 func (s *NoteStore) Get(title string) (Note, bool) {
-	s.mu.RLock() // RLock allows concurrent reads; no write is happening
+	s.mu.RLock()
 	defer s.mu.RUnlock()
 	n, ok := s.notes[title]
 	return n, ok
@@ -140,10 +137,10 @@ func (s *NoteStore) Search(keyword string) []Note {
 
 // ── File-backed store ────────────────────────────────────────────────────────
 
-// fileData is the on-disk JSON structure.
+// FileData is the on-disk JSON structure.
 // Wrapping notes in a versioned envelope (rather than storing a bare array)
 // makes it possible to migrate the format later without losing existing data.
-type fileData struct {
+type FileData struct {
 	Version int             `json:"version"`
 	Notes   map[string]Note `json:"notes"`
 }
@@ -153,7 +150,7 @@ type fileData struct {
 type FileStore struct {
 	mu   sync.RWMutex
 	path string
-	data fileData
+	Data FileData
 }
 
 // NewFileStore creates (or loads) a note store rooted at dir/notes.json.
@@ -165,12 +162,12 @@ func NewFileStore(dir string) (*FileStore, error) {
 	path := filepath.Join(dir, "notes.json")
 	fs := &FileStore{
 		path: path,
-		data: fileData{Version: 1, Notes: make(map[string]Note)},
+		Data: FileData{Version: 1, Notes: make(map[string]Note)},
 	}
 	if err := fs.load(); err != nil {
 		return nil, fmt.Errorf("load notes from %s: %w", path, err)
 	}
-	log.Printf("notes store: %s (%d note(s))", path, len(fs.data.Notes))
+	log.Printf("notes store: %s (%d note(s))", path, len(fs.Data.Notes))
 	return fs, nil
 }
 
@@ -184,14 +181,14 @@ func (fs *FileStore) load() error {
 	if err != nil {
 		return err
 	}
-	return json.Unmarshal(raw, &fs.data)
+	return json.Unmarshal(raw, &fs.Data)
 }
 
 // save writes the current in-memory state to disk atomically.
 // Write to a tmp file first, then rename so the file is never half-written.
 // Must be called with fs.mu held for writing.
 func (fs *FileStore) save() error {
-	raw, err := json.MarshalIndent(fs.data, "", "  ")
+	raw, err := json.MarshalIndent(fs.Data, "", "  ")
 	if err != nil {
 		return err
 	}
@@ -206,12 +203,12 @@ func (fs *FileStore) Add(title, content, repo string) error {
 	fs.mu.Lock()
 	defer fs.mu.Unlock()
 	now := time.Now().UTC().Format(time.RFC3339)
-	existing, exists := fs.data.Notes[title]
+	existing, exists := fs.Data.Notes[title]
 	createdAt := now
 	if exists {
 		createdAt = existing.CreatedAt
 	}
-	fs.data.Notes[title] = Note{
+	fs.Data.Notes[title] = Note{
 		Title:     title,
 		Content:   content,
 		Repo:      repo,
@@ -224,15 +221,15 @@ func (fs *FileStore) Add(title, content, repo string) error {
 func (fs *FileStore) Get(title string) (Note, bool) {
 	fs.mu.RLock()
 	defer fs.mu.RUnlock()
-	n, ok := fs.data.Notes[title]
+	n, ok := fs.Data.Notes[title]
 	return n, ok
 }
 
 func (fs *FileStore) List() []Note {
 	fs.mu.RLock()
 	defer fs.mu.RUnlock()
-	result := make([]Note, 0, len(fs.data.Notes))
-	for _, n := range fs.data.Notes {
+	result := make([]Note, 0, len(fs.Data.Notes))
+	for _, n := range fs.Data.Notes {
 		result = append(result, n)
 	}
 	return result
@@ -242,7 +239,7 @@ func (fs *FileStore) ListByRepo(repo string) []Note {
 	fs.mu.RLock()
 	defer fs.mu.RUnlock()
 	var result []Note
-	for _, n := range fs.data.Notes {
+	for _, n := range fs.Data.Notes {
 		if n.Repo == repo {
 			result = append(result, n)
 		}
@@ -253,10 +250,10 @@ func (fs *FileStore) ListByRepo(repo string) []Note {
 func (fs *FileStore) Delete(title string) (bool, error) {
 	fs.mu.Lock()
 	defer fs.mu.Unlock()
-	if _, ok := fs.data.Notes[title]; !ok {
+	if _, ok := fs.Data.Notes[title]; !ok {
 		return false, nil
 	}
-	delete(fs.data.Notes, title)
+	delete(fs.Data.Notes, title)
 	return true, fs.save()
 }
 
@@ -265,7 +262,7 @@ func (fs *FileStore) Search(keyword string) []Note {
 	defer fs.mu.RUnlock()
 	kw := strings.ToLower(keyword)
 	var result []Note
-	for _, n := range fs.data.Notes {
+	for _, n := range fs.Data.Notes {
 		if strings.Contains(strings.ToLower(n.Title), kw) ||
 			strings.Contains(strings.ToLower(n.Content), kw) {
 			result = append(result, n)

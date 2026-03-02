@@ -1,9 +1,12 @@
-# compiled binary
-karly-notes-mcp
+# compiled binaries
+mcp/karly-notes-mcp
+skills-playground/karly-notes-cli/karly-notes-cli
+
+# go workspace sum
+go.work.sum
 
 # macOS
 .DS_Store
-
 
 # Local claude settings
 .claude/settings.local.json
