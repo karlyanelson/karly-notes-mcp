@@ -1,0 +1,6 @@
+{
+  "name": "karly-notes",
+  "version": "1.0.0",
+  "description": "Note-taking skills backed by the karly-notes-cli — add, get, list, search, and delete persistent notes",
+  "skills": "./skills/"
+}

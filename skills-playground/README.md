@@ -50,9 +50,19 @@ Either add the build output to your PATH or copy it somewhere that's already on 
 cp skills-playground/karly-notes-cli/karly-notes-cli /usr/local/bin/
 ```
 
-### 3. Point your agent at the skills
+### 3. Install the skills as a Claude Code plugin
 
-How you do this depends on your agent. For Claude Code, you can place skill folders in `.claude/skills/` in your project root, or reference them from your agent's skill discovery configuration.
+This directory is a Claude Code plugin. Installing it once makes the skills available in every project, and they stay up to date automatically when you `git pull`.
+
+```bash
+# Add this repo as a local plugin marketplace
+/plugin marketplace add /path/to/karly-notes-mcp/skills-playground
+
+# Then open the plugin manager and install "karly-notes"
+/plugin
+```
+
+After installation, skills are namespaced as `/karly-notes:<skill-name>` (e.g. `/karly-notes:add-note`).
 
 ## CLI Usage
 
