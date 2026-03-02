@@ -44,8 +44,8 @@ Requires Go 1.24+.
 
 ```bash
 # Build everything from the repo root
-go build ./mcp/
-go build ./skills-playground/karly-notes-cli/
+go build -o mcp/karly-notes-mcp ./mcp/
+go build -o skills-playground/karly-notes-cli/karly-notes-cli ./skills-playground/karly-notes-cli/
 
 # Run all tests
 go test ./...
