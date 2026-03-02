@@ -42,13 +42,16 @@ From the repo root:
 go build -o skills-playground/karly-notes-cli/karly-notes-cli ./skills-playground/karly-notes-cli/
 ```
 
-### 2. Make the CLI available on your PATH
+### 2. Add the CLI to your PATH
 
-Either add the build output to your PATH or copy it somewhere that's already on your PATH:
+Add the build output directory to your shell profile so the binary is always available after a rebuild:
 
 ```bash
-cp skills-playground/karly-notes-cli/karly-notes-cli /usr/local/bin/
+# Add to ~/.zshrc (or ~/.bashrc)
+export PATH="/path/to/karly-notes-mcp/skills-playground/karly-notes-cli:$PATH"
 ```
+
+Then reload your shell (`source ~/.zshrc`) or open a new terminal.
 
 ### 3. Install the skills as a Claude Code plugin
 
