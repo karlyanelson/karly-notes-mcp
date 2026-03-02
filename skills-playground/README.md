@@ -25,7 +25,7 @@ This is a "progressive disclosure" pattern: the agent sees short descriptions fo
 |---|---|---|
 | **How the agent calls it** | Built-in MCP tool protocol | Runs a shell command via Bash |
 | **Discovery** | Agent sees tool schemas at session start | Agent sees skill name + description at session start |
-| **Execution** | Typed RPC over stdin/stdout | Agent runs `karly-notes-cli <command>` in a shell |
+| **Execution** | Typed RPC over stdin/stdout | Agent runs `bash scripts/run.sh <command>` in a shell |
 | **Output format** | MCP CallToolResult | JSON on stdout, errors on stderr |
 | **Setup** | `claude mcp add` registration | Drop skill folders where the agent looks for them |
 | **Portability** | Works with MCP-compatible agents | Works with any agent that supports the Agent Skills format |
@@ -42,18 +42,7 @@ From the repo root:
 go build -o skills-playground/cli/karly-notes-cli ./skills-playground/cli/
 ```
 
-### 2. Add the CLI to your PATH
-
-Add the build output directory to your shell profile so the binary is always available after a rebuild:
-
-```bash
-# Add to ~/.zshrc (or ~/.bashrc)
-export PATH="$HOME/path/to/karly-notes-mcp/skills-playground/cli:$PATH"
-```
-
-Then reload your shell (`source ~/.zshrc`) or open a new terminal.
-
-### 3. Install the skills as a Claude Code plugin
+### 2. Install the skills as a Claude Code plugin
 
 This directory is a Claude Code plugin. Installing it once makes the skills available in every project, and they stay up to date automatically when you `git pull`.
 
@@ -71,29 +60,31 @@ After installation, skills are namespaced as `/karly-notes:<skill-name>` (e.g. `
 
 ## CLI Usage
 
+Skills invoke the CLI through a wrapper script (`scripts/run.sh`) that resolves the binary path automatically — no PATH configuration needed:
+
 ```bash
-karly-notes-cli add --title "JWT gotcha" --content "Normalize to UTC before comparing expiry"
-karly-notes-cli get --title "JWT gotcha"
-karly-notes-cli list
-karly-notes-cli search --keyword "JWT"
-karly-notes-cli delete --title "old note"
-karly-notes-cli list-by-repo --repo "github.com/user/repo"
+bash scripts/run.sh add --title "JWT gotcha" --content "Normalize to UTC before comparing expiry"
+bash scripts/run.sh get --title "JWT gotcha"
+bash scripts/run.sh list
+bash scripts/run.sh search --keyword "JWT"
+bash scripts/run.sh delete --title "old note"
+bash scripts/run.sh list-by-repo --repo "github.com/user/repo"
 ```
 
 All commands output JSON to stdout. Errors go to stderr with a non-zero exit code.
 
 ## Skill Files
 
-Each skill maps to one CLI command:
+Each skill maps to one CLI command via the wrapper script:
 
-| Skill | CLI Command |
-|-------|-------------|
-| `skills/add-note/` | `karly-notes-cli add` |
-| `skills/get-note/` | `karly-notes-cli get` |
-| `skills/list-notes/` | `karly-notes-cli list` |
-| `skills/delete-note/` | `karly-notes-cli delete` |
-| `skills/search-notes/` | `karly-notes-cli search` |
-| `skills/list-notes-for-repo/` | `karly-notes-cli list-by-repo` |
+| Skill | Command |
+|-------|---------|
+| `skills/add-note/` | `bash scripts/run.sh add` |
+| `skills/get-note/` | `bash scripts/run.sh get` |
+| `skills/list-notes/` | `bash scripts/run.sh list` |
+| `skills/delete-note/` | `bash scripts/run.sh delete` |
+| `skills/search-notes/` | `bash scripts/run.sh search` |
+| `skills/list-notes-for-repo/` | `bash scripts/run.sh list-by-repo` |
 
 ## Updating the Plugin After Local Changes
 

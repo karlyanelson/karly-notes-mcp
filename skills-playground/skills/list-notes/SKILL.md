@@ -1,7 +1,7 @@
 ---
 name: list-notes
 description: List all saved notes with their titles and timestamps. Use when the user wants to see what notes they have or browse their note collection.
-allowed-tools: Bash(karly-notes-cli:*)
+allowed-tools: Bash(bash scripts/run.sh:*)
 ---
 
 # List Notes
@@ -18,7 +18,7 @@ Use this skill when the user wants to:
 Run the CLI with the `list` command:
 
 ```bash
-karly-notes-cli list
+bash scripts/run.sh list
 ```
 
 ### Parameters
@@ -38,5 +38,5 @@ An empty array `[]` is returned if no notes exist.
 ### Example
 
 ```bash
-karly-notes-cli list
+bash scripts/run.sh list
 ```

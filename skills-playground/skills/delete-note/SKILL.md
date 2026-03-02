@@ -1,7 +1,7 @@
 ---
 name: delete-note
 description: Delete a note by its exact title. Use when the user wants to remove a note they no longer need.
-allowed-tools: Bash(karly-notes-cli:*)
+allowed-tools: Bash(bash scripts/run.sh:*)
 ---
 
 # Delete Note
@@ -18,7 +18,7 @@ Use this skill when the user wants to:
 Run the CLI with the `delete` command:
 
 ```bash
-karly-notes-cli delete --title "TITLE"
+bash scripts/run.sh delete --title "TITLE"
 ```
 
 ### Parameters
@@ -38,5 +38,5 @@ If the note is not found, an error is printed to stderr with a non-zero exit cod
 ### Example
 
 ```bash
-karly-notes-cli delete --title "old todo list"
+bash scripts/run.sh delete --title "old todo list"
 ```

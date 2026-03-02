@@ -1,7 +1,7 @@
 ---
 name: search-notes
 description: Search notes by keyword. Matches against both title and content (case-insensitive). Use when the user wants to find notes about a topic or containing specific text.
-allowed-tools: Bash(karly-notes-cli:*)
+allowed-tools: Bash(bash scripts/run.sh:*)
 ---
 
 # Search Notes
@@ -18,7 +18,7 @@ Use this skill when the user wants to:
 Run the CLI with the `search` command:
 
 ```bash
-karly-notes-cli search --keyword "KEYWORD"
+bash scripts/run.sh search --keyword "KEYWORD"
 ```
 
 ### Parameters
@@ -38,6 +38,6 @@ An empty array `[]` is returned if no notes match.
 ### Examples
 
 ```bash
-karly-notes-cli search --keyword "JWT"
-karly-notes-cli search --keyword "docker"
+bash scripts/run.sh search --keyword "JWT"
+bash scripts/run.sh search --keyword "docker"
 ```

@@ -24,9 +24,11 @@ Both share a common storage library (`common/`) so the note logic is written onc
 │   ├── README.md
 │   └── go.mod
 ├── skills-playground/               # Agent Skills approach
-│   ├── cli/             # Go CLI with subcommands
+│   ├── cli/                         # Go CLI with subcommands
 │   │   ├── main.go
 │   │   └── go.mod
+│   ├── scripts/                     # Wrapper script for CLI invocation
+│   │   └── run.sh
 │   ├── skills/                      # SKILL.md files for each operation
 │   │   ├── add-note/
 │   │   ├── get-note/

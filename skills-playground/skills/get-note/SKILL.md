@@ -1,7 +1,7 @@
 ---
 name: get-note
 description: Retrieve a note by its exact title. Use when the user asks to see, read, or recall a specific note they saved previously.
-allowed-tools: Bash(karly-notes-cli:*)
+allowed-tools: Bash(bash scripts/run.sh:*)
 ---
 
 # Get Note
@@ -18,7 +18,7 @@ Use this skill when the user wants to:
 Run the CLI with the `get` command:
 
 ```bash
-karly-notes-cli get --title "TITLE"
+bash scripts/run.sh get --title "TITLE"
 ```
 
 ### Parameters
@@ -38,5 +38,5 @@ If the note is not found, an error is printed to stderr with a non-zero exit cod
 ### Example
 
 ```bash
-karly-notes-cli get --title "JWT timezone gotcha"
+bash scripts/run.sh get --title "JWT timezone gotcha"
 ```

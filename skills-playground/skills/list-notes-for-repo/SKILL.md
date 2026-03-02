@@ -1,7 +1,7 @@
 ---
 name: list-notes-for-repo
 description: List all notes saved in a specific repository. Use when the user starts working in a project and wants to surface relevant notes, or when they ask for notes related to a particular repo.
-allowed-tools: Bash(karly-notes-cli:*)
+allowed-tools: Bash(bash scripts/run.sh:*)
 ---
 
 # List Notes for Repository
@@ -18,7 +18,7 @@ Use this skill when the user wants to:
 Run the CLI with the `list-by-repo` command:
 
 ```bash
-karly-notes-cli list-by-repo --repo "REPO"
+bash scripts/run.sh list-by-repo --repo "REPO"
 ```
 
 ### Parameters
@@ -38,5 +38,5 @@ An empty array `[]` is returned if no notes exist for the given repo.
 ### Example
 
 ```bash
-karly-notes-cli list-by-repo --repo "github.com/user/my-app"
+bash scripts/run.sh list-by-repo --repo "github.com/user/my-app"
 ```

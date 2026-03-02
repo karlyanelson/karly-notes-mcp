@@ -1,7 +1,7 @@
 ---
 name: add-note
 description: Save a note with a title and content. Use when the user wants to save, remember, or jot down information for later. If a note with the same title exists, it will be updated.
-allowed-tools: Bash(karly-notes-cli:*)
+allowed-tools: Bash(bash scripts/run.sh:*)
 ---
 
 # Add Note
@@ -30,7 +30,7 @@ If the command fails (not a git repo or no remote), omit `--repo`.
 ### Step 2: Run the CLI
 
 ```bash
-karly-notes-cli add --title "TITLE" --content "CONTENT" [--repo "REPO"]
+bash scripts/run.sh add --title "TITLE" --content "CONTENT" [--repo "REPO"]
 ```
 
 ### Parameters
@@ -54,11 +54,11 @@ Errors are printed to stderr with a non-zero exit code.
 Save a simple note:
 
 ```bash
-karly-notes-cli add --title "JWT timezone gotcha" --content "Normalize to UTC before comparing expiry"
+bash scripts/run.sh add --title "JWT timezone gotcha" --content "Normalize to UTC before comparing expiry"
 ```
 
 Save a note tied to a repo:
 
 ```bash
-karly-notes-cli add --title "Docker networking" --content "Use bridge mode for local dev" --repo "github.com/user/infra"
+bash scripts/run.sh add --title "Docker networking" --content "Use bridge mode for local dev" --repo "github.com/user/infra"
 ```
