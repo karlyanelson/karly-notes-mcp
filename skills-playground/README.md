@@ -6,7 +6,7 @@ An alternative to the MCP server approach — same note-taking capabilities, but
 
 Instead of an MCP server that Claude discovers and calls tools on, this approach uses:
 
-1. **A CLI** (`karly-notes-cli/`) — A Go command-line tool with subcommands (`add`, `get`, `list`, `delete`, `search`, `list-by-repo`) that read/write the same `~/.karly-notes/notes.json` file as the MCP server.
+1. **A CLI** (`cli/`) — A Go command-line tool with subcommands (`add`, `get`, `list`, `delete`, `search`, `list-by-repo`) that read/write the same `~/.karly-notes/notes.json` file as the MCP server.
 
 2. **Skill files** (`skills/`) — Markdown files following the [Agent Skills spec](https://agentskills.io/specification) that tell an agent *when* and *how* to use the CLI commands.
 
@@ -39,7 +39,7 @@ Both approaches share the same underlying storage via the `common/` package.
 From the repo root:
 
 ```bash
-go build -o skills-playground/karly-notes-cli/karly-notes-cli ./skills-playground/karly-notes-cli/
+go build -o skills-playground/cli/karly-notes-cli ./skills-playground/cli/
 ```
 
 ### 2. Add the CLI to your PATH
@@ -48,7 +48,7 @@ Add the build output directory to your shell profile so the binary is always ava
 
 ```bash
 # Add to ~/.zshrc (or ~/.bashrc)
-export PATH="$HOME/path/to/karly-notes-mcp/skills-playground/karly-notes-cli:$PATH"
+export PATH="$HOME/path/to/karly-notes-mcp/skills-playground/cli:$PATH"
 ```
 
 Then reload your shell (`source ~/.zshrc`) or open a new terminal.

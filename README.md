@@ -24,7 +24,7 @@ Both share a common storage library (`common/`) so the note logic is written onc
 │   ├── README.md
 │   └── go.mod
 ├── skills-playground/               # Agent Skills approach
-│   ├── karly-notes-cli/             # Go CLI with subcommands
+│   ├── cli/             # Go CLI with subcommands
 │   │   ├── main.go
 │   │   └── go.mod
 │   ├── skills/                      # SKILL.md files for each operation
@@ -45,7 +45,7 @@ Requires Go 1.24+.
 ```bash
 # Build everything from the repo root
 go build -o mcp/karly-notes-mcp ./mcp/
-go build -o skills-playground/karly-notes-cli/karly-notes-cli ./skills-playground/karly-notes-cli/
+go build -o skills-playground/cli/karly-notes-cli ./skills-playground/cli/
 
 # Run all tests
 go test ./...

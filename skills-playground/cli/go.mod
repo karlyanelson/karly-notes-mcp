@@ -1,4 +1,4 @@
-module karly-notes-mcp/skills-playground/karly-notes-cli
+module karly-notes-mcp/skills-playground/cli
 
 go 1.25.3
 
